@@ -450,4 +450,432 @@ function updateNear(){
   setNr(h);
   var c="";
   for(var j=1;j<3;j++){
-    c+='<span class="chip2" onclick="focusStop('+A[j].i+')">'+S
+    c+='<span class="chip2" onclick="focusStop('+A[j].i+')">'+ST[A[j].i].n+' · '+fd(A[j].d)+'</span>';
+  }
+  $("nr2").innerHTML=c;
+}
+function focusStop(i){
+  if(!map)return;
+  map.setView([ST[i].a,ST[i].o],16);
+  MK[i].openPopup();
+}
+function fromHere(){
+  if(NEAR<0){alert('Marka hore riix "Goobtayda".');return}
+  $("from").value=ST[NEAR].n;
+  $("to").value="";
+  tab("hm");
+}
+function useNear(){
+  if(NEAR<0){alert('Marka hore gudaha Khariidad riix "Goobtayda".');return}
+  $("from").value=ST[NEAR].n;
+}
+function gotoPlan(i){
+  if(map)map.closePopup();
+  var f=(NEAR>-1&&NEAR!=i)?ST[NEAR].n:(i==0?"":"Suuqa");
+  $("from").value=f;
+  $("to").value=ST[i].n;
+  tab("hm");
+  doSearch();
+}
+
+/* ===== RAADI SAFARKA ===== */
+function swap(){var a=$("from"),b=$("to");var t=a.value;a.value=b.value;b.value=t}
+function fill(a,b){$("from").value=a;$("to").value=b}
+(function(){
+  var h="";
+  for(var k=0;k<NR;k++){
+    h+='<div onclick="fill(\'Suuqa\',\''+ST[k+1].n+'\')">○ Suuqa<br>○ '+ST[k+1].n+'</div>';
+  }
+  $("rec").innerHTML=h;
+  var d=new Date(Date.now()+3600000);
+  $("when").value=pad(d.getHours())+":"+pad(d.getMinutes());
+})();
+
+function want(){
+  var v=$("when").value;
+  if(!v||v.indexOf(":")<0)return null;
+  var p=v.split(":");
+  var x=parseInt(p[0],10)*60+parseInt(p[1],10);
+  if(isNaN(x))return null;
+  var d=new Date();
+  return (x-(d.getHours()*60+d.getMinutes())+1440)%1440;
+}
+
+function doSearch(){
+  var f=$("from").value.trim().toLowerCase();
+  var t=$("to").value.trim().toLowerCase();
+  var W=want(),res=[],note="",k,d,n,y;
+  for(k=0;k<NR;k++){
+    for(d=0;d<2;d++){
+      var x=trip(k,d,0);
+      if((!f||x.f.toLowerCase().indexOf(f)>-1)&&(!t||x.t.toLowerCase().indexOf(t)>-1)){
+        for(n=0;n<3;n++){y=trip(k,d,0);y.w+=15*n;res.push({legs:[y],dep:y.w,arr:y.w+y.r})}
+      }
+    }
+  }
+  if(!res.length&&f&&t){
+    var a=idxOf(f),b=idxOf(t);
+    if(a>-1&&b>-1&&a!=b){
+      for(n=0;n<3;n++){
+        var l1=trip(a,1,0);l1.w+=15*n;
+        var l2=trip(b,0,l1.w+l1.r+2);
+        res.push({legs:[l1,l2],dep:l1.w,arr:l2.w+l2.r});
+      }
+    }
+  }
+  if(!res.length){
+    note='<div class="note">Jid ka dhexeeya labadan ma helin. Waa kuu muujinayaa dhammaan basaska.</div>';
+    for(k=0;k<NR;k++){for(d=0;d<2;d++){y=trip(k,d,0);res.push({legs:[y],dep:y.w,arr:y.w+y.r})}}
+  }
+  res.sort(function(p,q){return p.dep-q.dep});
+  RES=res;
+  var h=note;
+  if(W!==null){h+='<div class="card" style="margin-bottom:0">Waqtiga aad rabto inaad gaadho: <b>'+$("when").value+'</b></div>'}
+  for(var i=0;i<res.length;i++){
+    var r=res[i],L1=r.legs;
+    var title=L1.length>1?L1[0].c+" + "+L1[1].c:L1[0].c;
+    var sub=L1.length>1?L1[0].f+" → Suuqa → "+L1[1].t+" (isbeddel Suuqa)":L1[0].f+" → "+L1[0].t;
+    var badge="";
+    if(W!==null){badge=r.arr<=W?'<span class="ok">✓ Waqtigaaga ku jira</span>':'<span class="late">⚠ Way daahaysaa</span>'}
+    h+='<div class="it" onclick="openRes('+i+')"><b>'+title+'</b><small>'+sub+'</small><small>Baxaya '+fmt(r.dep)+' · Gaadhaya '+fmt(r.arr)+'</small>'+badge+'<span class="min">'+wt(r.dep)+'</span></div>';
+  }
+  $("rsb").innerHTML=h;
+  if(cur=="rs"){go("rs")}else{push("rs")}
+}
+function openRes(i){openTrack(RES[i].legs)}
+
+/* ===== JIDADKA ===== */
+function drawRoutes(){
+  var q=$("rq").value.trim().toLowerCase(),h="";
+  for(var k=0;k<NR;k++){
+    var txt=(code(k)+" suuqa "+ST[k+1].n).toLowerCase();
+    if(q&&txt.indexOf(q)<0)continue;
+    h+='<div class="it" onclick="routeGo('+k+')"><b>'+code(k)+'</b><small>Suuqa ⇄ '+ST[k+1].n+' · ~'+ride(k)+' daq.</small><span class="min">›</span></div>';
+  }
+  $("rtl").innerHTML=h||'<div class="empty">Jid lama helin</div>';
+}
+function routeGo(k){
+  $("from").value="Suuqa";
+  $("to").value=ST[k+1].n;
+  doSearch();
+}
+
+/* ===== WAQTIGA ===== */
+(function(){
+  var h="";
+  for(var i=0;i<ST.length;i++){h+='<option value="'+i+'">'+ST[i].n+'</option>'}
+  $("stopSel").innerHTML=h;
+})();
+function renderTm(){
+  var s=parseInt($("stopSel").value,10),list=[],k,n,x;
+  if(s==0){
+    for(k=0;k<NR;k++){list.push(trip(k,0,0))}
+  }else{
+    for(n=0;n<4;n++){x=trip(s-1,1,0);x.w+=15*n;list.push(x)}
+  }
+  list.sort(function(a,b){return a.w-b.w});
+  TML=list;
+  var h="";
+  for(var i=0;i<list.length;i++){
+    var t=list[i];
+    h+='<div class="it" onclick="openOne('+i+')"><b>'+t.c+'</b><small>'+t.f+' → '+t.t+' · '+fmt(t.w)+'</small><span class="min">'+wt(t.w)+'</span></div>';
+  }
+  $("tml").innerHTML=h;
+}
+function openOne(i){openTrack([TML[i]])}
+
+/* ===== RAADI BASKAYGA ===== */
+var tmap=null,TLG=null,tbus=null,TP=[],timer=null,prog=0;
+function initTrackMap(){
+  if(typeof L=="undefined"){
+    $("tmap").innerHTML='<div class="empty">Khariidadda waxay u baahan tahay internet.</div>';
+    return false;
+  }
+  if(!tmap){
+    tmap=L.map("tmap").setView([ST[0].a,ST[0].o],13);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(tmap);
+    TLG=L.layerGroup().addTo(tmap);
+  }
+  tmap.invalidateSize();
+  TLG.clearLayers();
+  var line=L.polyline(TP,{color:"#1e88e5",weight:5}).addTo(TLG);
+  for(var i=0;i<TP.length;i++){
+    var m=L.marker(TP[i],{icon:L.divIcon({className:"sd",iconSize:[16,16],iconAnchor:[8,8]}),interactive:false}).addTo(TLG);
+    m.bindTooltip(TP[i][2],{permanent:true,direction:"top",offset:[0,-8],className:"lbl"});
+  }
+  if(ME){L.marker(ME,{icon:L.divIcon({className:"me",iconSize:[18,18],iconAnchor:[9,9]}),interactive:false}).addTo(TLG)}
+  tbus=L.marker(TP[0],{icon:L.divIcon({className:"bm",html:"🚌",iconSize:[28,28],iconAnchor:[14,14]}),interactive:false}).addTo(TLG);
+  tmap.fitBounds(line.getBounds(),{padding:[40,40]});
+  return true;
+}
+function moveBus(){
+  if(!tbus)return;
+  prog+=0.003;
+  if(prog>1){prog=0}
+  var n=TP.length-1,s=prog*n,i=Math.min(Math.floor(s),n-1),f=s-i;
+  tbus.setLatLng([TP[i][0]+(TP[i+1][0]-TP[i][0])*f,TP[i][1]+(TP[i+1][1]-TP[i][1])*f]);
+}
+function stopTrack(){if(timer){clearInterval(timer);timer=null}}
+function openTrack(legs){
+  CUR=legs;
+  var a=legs[0],z=legs[legs.length-1];
+  $("trl").textContent=legs.length>1?a.c+" + "+z.c:a.c;
+  $("trf").textContent=a.f;
+  $("tre").textContent=wt(a.w);
+  $("trn").textContent=z.t;
+  $("trx").textContent=legs.length>1?"Isbeddel Suuqa: kaxeeya "+z.c+" una socda "+z.t+".":"Baska waa socdaa, wuxuu kuu soo dhow yahay.";
+  var names=[a.f,a.t];
+  if(legs.length>1){names.push(z.t)}
+  TP=[];
+  for(var i=0;i<names.length;i++){var s=stopOf(names[i]);TP.push([s.a,s.o,s.n])}
+  push("tr");
+  if(initTrackMap()){
+    prog=0;moveBus();
+    timer=setInterval(moveBus,100);
+  }
+}
+
+/* ===== TIKIDHADA ===== */
+var T=[];
+try{T=JSON.parse(localStorage.getItem("tk2")||"[]")}catch(e){}
+function saveT(){try{localStorage.setItem("tk2",JSON.stringify(T))}catch(e){}}
+function label(L1){
+  if(L1.length>1){return L1[0].f+" → Suuqa → "+L1[1].t+" ("+L1[0].c+" + "+L1[1].c+")"}
+  return L1[0].f+" → "+L1[0].t+" ("+L1[0].c+")";
+}
+function buy(){
+  if(!CUR.length)return;
+  T.unshift({r:label(CUR),d:new Date().toLocaleString()});
+  saveT();
+  alert("Tikidhkaaga waa la kaydiyay ✓");
+}
+function drawT(){
+  var h="";
+  if(!T.length){h='<div class="empty">Tikidh weli ma haysatid</div>'}
+  else{
+    for(var i=0;i<T.length;i++){
+      h+='<div class="it" style="padding-right:16px"><b>🎫 '+T[i].r+'</b><small>'+T[i].d+'</small></div>';
+    }
+  }
+  $("tkl").innerHTML=h;
+}
+function clearT(){
+  if(confirm("Ma hubtaa inaad tirtirto tikidhada?")){T=[];saveT();drawT()}
+}
+</script>
+</body>
+</html>ST[A[j].i].n+' · '+fd(A[j].d)+'</span>';
+  }
+  $("nr2").innerHTML=c;
+}
+function focusStop(i){
+  if(!map)return;
+  map.setView([ST[i].a,ST[i].o],16);
+  MK[i].openPopup();
+}
+function fromHere(){
+  if(NEAR<0){alert('Marka hore riix "Goobtayda".');return}
+  $("from").value=ST[NEAR].n;
+  $("to").value="";
+  tab("hm");
+}
+function useNear(){
+  if(NEAR<0){alert('Marka hore gudaha Khariidad riix "Goobtayda".');return}
+  $("from").value=ST[NEAR].n;
+}
+function gotoPlan(i){
+  if(map)map.closePopup();
+  var f=(NEAR>-1&&NEAR!=i)?ST[NEAR].n:(i==0?"":"Suuqa");
+  $("from").value=f;
+  $("to").value=ST[i].n;
+  tab("hm");
+  doSearch();
+}
+
+/* ===== RAADI SAFARKA ===== */
+function swap(){var a=$("from"),b=$("to");var t=a.value;a.value=b.value;b.value=t}
+function fill(a,b){$("from").value=a;$("to").value=b}
+(function(){
+  var h="";
+  for(var k=0;k<NR;k++){
+    h+='<div onclick="fill(\'Suuqa\',\''+ST[k+1].n+'\')">○ Suuqa<br>○ '+ST[k+1].n+'</div>';
+  }
+  $("rec").innerHTML=h;
+  var d=new Date(Date.now()+3600000);
+  $("when").value=pad(d.getHours())+":"+pad(d.getMinutes());
+})();
+
+function want(){
+  var v=$("when").value;
+  if(!v||v.indexOf(":")<0)return null;
+  var p=v.split(":");
+  var x=parseInt(p[0],10)*60+parseInt(p[1],10);
+  if(isNaN(x))return null;
+  var d=new Date();
+  return (x-(d.getHours()*60+d.getMinutes())+1440)%1440;
+}
+
+function doSearch(){
+  var f=$("from").value.trim().toLowerCase();
+  var t=$("to").value.trim().toLowerCase();
+  var W=want(),res=[],note="",k,d,n,y;
+  for(k=0;k<NR;k++){
+    for(d=0;d<2;d++){
+      var x=trip(k,d,0);
+      if((!f||x.f.toLowerCase().indexOf(f)>-1)&&(!t||x.t.toLowerCase().indexOf(t)>-1)){
+        for(n=0;n<3;n++){y=trip(k,d,0);y.w+=15*n;res.push({legs:[y],dep:y.w,arr:y.w+y.r})}
+      }
+    }
+  }
+  if(!res.length&&f&&t){
+    var a=idxOf(f),b=idxOf(t);
+    if(a>-1&&b>-1&&a!=b){
+      for(n=0;n<3;n++){
+        var l1=trip(a,1,0);l1.w+=15*n;
+        var l2=trip(b,0,l1.w+l1.r+2);
+        res.push({legs:[l1,l2],dep:l1.w,arr:l2.w+l2.r});
+      }
+    }
+  }
+  if(!res.length){
+    note='<div class="note">Jid ka dhexeeya labadan ma helin. Waa kuu muujinayaa dhammaan basaska.</div>';
+    for(k=0;k<NR;k++){for(d=0;d<2;d++){y=trip(k,d,0);res.push({legs:[y],dep:y.w,arr:y.w+y.r})}}
+  }
+  res.sort(function(p,q){return p.dep-q.dep});
+  RES=res;
+  var h=note;
+  if(W!==null){h+='<div class="card" style="margin-bottom:0">Waqtiga aad rabto inaad gaadho: <b>'+$("when").value+'</b></div>'}
+  for(var i=0;i<res.length;i++){
+    var r=res[i],L1=r.legs;
+    var title=L1.length>1?L1[0].c+" + "+L1[1].c:L1[0].c;
+    var sub=L1.length>1?L1[0].f+" → Suuqa → "+L1[1].t+" (isbeddel Suuqa)":L1[0].f+" → "+L1[0].t;
+    var badge="";
+    if(W!==null){badge=r.arr<=W?'<span class="ok">✓ Waqtigaaga ku jira</span>':'<span class="late">⚠ Way daahaysaa</span>'}
+    h+='<div class="it" onclick="openRes('+i+')"><b>'+title+'</b><small>'+sub+'</small><small>Baxaya '+fmt(r.dep)+' · Gaadhaya '+fmt(r.arr)+'</small>'+badge+'<span class="min">'+wt(r.dep)+'</span></div>';
+  }
+  $("rsb").innerHTML=h;
+  if(cur=="rs"){go("rs")}else{push("rs")}
+}
+function openRes(i){openTrack(RES[i].legs)}
+
+/* ===== JIDADKA ===== */
+function drawRoutes(){
+  var q=$("rq").value.trim().toLowerCase(),h="";
+  for(var k=0;k<NR;k++){
+    var txt=(code(k)+" suuqa "+ST[k+1].n).toLowerCase();
+    if(q&&txt.indexOf(q)<0)continue;
+    h+='<div class="it" onclick="routeGo('+k+')"><b>'+code(k)+'</b><small>Suuqa ⇄ '+ST[k+1].n+' · ~'+ride(k)+' daq.</small><span class="min">›</span></div>';
+  }
+  $("rtl").innerHTML=h||'<div class="empty">Jid lama helin</div>';
+}
+function routeGo(k){
+  $("from").value="Suuqa";
+  $("to").value=ST[k+1].n;
+  doSearch();
+}
+
+/* ===== WAQTIGA ===== */
+(function(){
+  var h="";
+  for(var i=0;i<ST.length;i++){h+='<option value="'+i+'">'+ST[i].n+'</option>'}
+  $("stopSel").innerHTML=h;
+})();
+function renderTm(){
+  var s=parseInt($("stopSel").value,10),list=[],k,n,x;
+  if(s==0){
+    for(k=0;k<NR;k++){list.push(trip(k,0,0))}
+  }else{
+    for(n=0;n<4;n++){x=trip(s-1,1,0);x.w+=15*n;list.push(x)}
+  }
+  list.sort(function(a,b){return a.w-b.w});
+  TML=list;
+  var h="";
+  for(var i=0;i<list.length;i++){
+    var t=list[i];
+    h+='<div class="it" onclick="openOne('+i+')"><b>'+t.c+'</b><small>'+t.f+' → '+t.t+' · '+fmt(t.w)+'</small><span class="min">'+wt(t.w)+'</span></div>';
+  }
+  $("tml").innerHTML=h;
+}
+function openOne(i){openTrack([TML[i]])}
+
+/* ===== RAADI BASKAYGA ===== */
+var tmap=null,TLG=null,tbus=null,TP=[],timer=null,prog=0;
+function initTrackMap(){
+  if(typeof L=="undefined"){
+    $("tmap").innerHTML='<div class="empty">Khariidadda waxay u baahan tahay internet.</div>';
+    return false;
+  }
+  if(!tmap){
+    tmap=L.map("tmap").setView([ST[0].a,ST[0].o],13);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(tmap);
+    TLG=L.layerGroup().addTo(tmap);
+  }
+  tmap.invalidateSize();
+  TLG.clearLayers();
+  var line=L.polyline(TP,{color:"#1e88e5",weight:5}).addTo(TLG);
+  for(var i=0;i<TP.length;i++){
+    var m=L.marker(TP[i],{icon:L.divIcon({className:"sd",iconSize:[16,16],iconAnchor:[8,8]}),interactive:false}).addTo(TLG);
+    m.bindTooltip(TP[i][2],{permanent:true,direction:"top",offset:[0,-8],className:"lbl"});
+  }
+  if(ME){L.marker(ME,{icon:L.divIcon({className:"me",iconSize:[18,18],iconAnchor:[9,9]}),interactive:false}).addTo(TLG)}
+  tbus=L.marker(TP[0],{icon:L.divIcon({className:"bm",html:"🚌",iconSize:[28,28],iconAnchor:[14,14]}),interactive:false}).addTo(TLG);
+  tmap.fitBounds(line.getBounds(),{padding:[40,40]});
+  return true;
+}
+function moveBus(){
+  if(!tbus)return;
+  prog+=0.003;
+  if(prog>1){prog=0}
+  var n=TP.length-1,s=prog*n,i=Math.min(Math.floor(s),n-1),f=s-i;
+  tbus.setLatLng([TP[i][0]+(TP[i+1][0]-TP[i][0])*f,TP[i][1]+(TP[i+1][1]-TP[i][1])*f]);
+}
+function stopTrack(){if(timer){clearInterval(timer);timer=null}}
+function openTrack(legs){
+  CUR=legs;
+  var a=legs[0],z=legs[legs.length-1];
+  $("trl").textContent=legs.length>1?a.c+" + "+z.c:a.c;
+  $("trf").textContent=a.f;
+  $("tre").textContent=wt(a.w);
+  $("trn").textContent=z.t;
+  $("trx").textContent=legs.length>1?"Isbeddel Suuqa: kaxeeya "+z.c+" una socda "+z.t+".":"Baska waa socdaa, wuxuu kuu soo dhow yahay.";
+  var names=[a.f,a.t];
+  if(legs.length>1){names.push(z.t)}
+  TP=[];
+  for(var i=0;i<names.length;i++){var s=stopOf(names[i]);TP.push([s.a,s.o,s.n])}
+  push("tr");
+  if(initTrackMap()){
+    prog=0;moveBus();
+    timer=setInterval(moveBus,100);
+  }
+}
+
+/* ===== TIKIDHADA ===== */
+var T=[];
+try{T=JSON.parse(localStorage.getItem("tk2")||"[]")}catch(e){}
+function saveT(){try{localStorage.setItem("tk2",JSON.stringify(T))}catch(e){}}
+function label(L1){
+  if(L1.length>1){return L1[0].f+" → Suuqa → "+L1[1].t+" ("+L1[0].c+" + "+L1[1].c+")"}
+  return L1[0].f+" → "+L1[0].t+" ("+L1[0].c+")";
+}
+function buy(){
+  if(!CUR.length)return;
+  T.unshift({r:label(CUR),d:new Date().toLocaleString()});
+  saveT();
+  alert("Tikidhkaaga waa la kaydiyay ✓");
+}
+function drawT(){
+  var h="";
+  if(!T.length){h='<div class="empty">Tikidh weli ma haysatid</div>'}
+  else{
+    for(var i=0;i<T.length;i++){
+      h+='<div class="it" style="padding-right:16px"><b>🎫 '+T[i].r+'</b><small>'+T[i].d+'</small></div>';
+    }
+  }
+  $("tkl").innerHTML=h;
+}
+function clearT(){
+  if(confirm("Ma hubtaa inaad tirtirto tikidhada?")){T=[];saveT();drawT()}
+}
+</script>
+</body>
+    </html>
