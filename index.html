@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#176B3A">
+<title>RAAC SMART</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%;font-family:Arial,sans-serif;background:#111;color:#171717}
+#app{position:fixed;top:0;left:0;right:0;bottom:0;background:#f4f4f5;overflow:hidden}
+.scr{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:#f4f4f5;overflow:auto}
+.scr.on{display:block}
+.scr.tab{bottom:60px}
+.scr.fx{overflow:hidden}
+.g{color:#176B3A}
+.btn{display:block;width:100%;padding:14px;border:0;border-radius:12px;background:#176B3A;color:#fff;font-size:16px;font-weight:bold;margin-top:14px}
+.btn.o{background:#fff;color:#176B3A;border:1px solid #176B3A}
+
+/* NAV */
+#nav{display:none;position:absolute;left:0;right:0;bottom:0;height:60px;background:#fff;border-top:1px solid #ddd}
+#nav button{float:left;width:25%;height:60px;border:0;background:#fff;color:#777;font-size:12px;padding:0}
+#nav button b{display:block;font-size:20px;line-height:26px}
+#nav button.on{color:#176B3A;font-weight:bold}
+
+/* ONBOARDING */
+#ob{background:#4ca573}
+.ph{background:#fff;width:84%;max-width:340px;margin:50px auto 30px;border-radius:30px;padding:26px 22px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.ill{font-size:90px;height:120px;line-height:120px}
+.dots{margin-top:6px}
+.dots span{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ccc;margin:0 3px}
+.dots span.on{background:#0b4a24}
+.ph h2{margin:18px 0 8px;color:#0b4a24;font-size:22px}
+.ph p{margin:0 0 24px;font-size:14px;color:#555;min-height:60px}
+.row{overflow:hidden;font-weight:bold;color:#0b4a24}
+.row .skip{float:left;padding:8px 0}
+.row button{float:right;border:1px solid #bbb;background:#fff;border-radius:8px;width:38px;height:38px;font-size:18px}
+
+/* HOME */
+.big{background:#176B3A;background:linear-gradient(#1f8a4c,#176B3A);color:#fff;padding:20px 20px 36px;border-radius:0 0 26px 26px}
+.big .logo{font-size:16px;font-weight:bold;letter-spacing:1px;overflow:hidden}
+.big .bell{float:right;border:0;background:none;color:#fff;font-size:20px;padding:0}
+.big h1{margin:20px 0 6px;font-size:30px}
+.big p{margin:0;opacity:.92;font-size:15px}
+.plan{position:relative;background:#fff;margin:-18px 14px 14px;border-radius:18px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.14)}
+.plan .tt{overflow:hidden;font-weight:bold;font-size:18px}
+.demo{float:right;background:#dcfce7;color:#15803d;font-size:11px;font-weight:bold;padding:4px 10px;border-radius:12px}
+.plan label{display:block;font-size:13px;color:#666;margin-top:12px}
+.plan input{display:block;width:100%;padding:13px;margin-top:6px;border:1px solid #d4d4d8;border-radius:12px;font-size:16px;background:#fff;outline:0}
+.sw{display:block;margin:12px auto 0;border:1px solid #176B3A;background:#fff;color:#176B3A;border-radius:18px;padding:7px 18px;font-size:14px}
+.sec{margin:6px 16px 8px;color:#666;font-size:14px}
+.rec{white-space:nowrap;overflow-x:auto;overflow-y:hidden;padding:0 14px 8px}
+.rec div{display:inline-block;width:150px;margin-right:8px;border:1px solid #d4d4d8;background:#fff;border-radius:12px;padding:10px;font-size:13px;white-space:normal}
+.foot{text-align:center;color:#888;font-size:12px;padding:16px 0 24px}
+
+/* HEADER SCREENS */
+.hd{position:absolute;top:0;left:0;right:0;height:64px;background:#176B3A;color:#fff;padding:12px 16px 0 60px}
+.hd.nb{padding-left:16px}
+.hd .b{position:absolute;left:10px;top:10px;width:44px;height:44px;font-size:26px;border:0;background:none;color:#fff;padding:0}
+.hd h3{margin:0;font-size:18px;line-height:40px}
+.body{position:absolute;top:64px;left:0;right:0;bottom:0;overflow:auto}
+.bar{background:#4caf50;color:#fff;text-align:center;padding:13px;font-size:16px}
+.it{position:relative;background:#fff;padding:13px 90px 13px 16px;border-bottom:1px solid #eee}
+.it b{color:#176B3A;font-size:18px}
+.it small{display:block;color:#555;font-size:12px;margin-top:3px}
+.it .min{position:absolute;right:16px;top:18px;color:#176B3A;font-size:16px;font-weight:bold}
+.ok,.late{display:inline-block;margin-top:5px;font-size:11px;padding:2px 8px;border-radius:10px}
+.ok{background:#dcfce7;color:#15803d}
+.late{background:#fef3c7;color:#b45309}
+.note{padding:10px 16px;color:#b45309;background:#fef3c7;font-size:13px}
+.empty{text-align:center;color:#888;padding:28px}
+.srch{display:block;width:calc(100% - 28px);margin:12px 14px;padding:12px;border:1px solid #d4d4d8;border-radius:12px;font-size:16px;background:#fff}
+select{display:block;width:calc(100% - 28px);margin:12px 14px;padding:12px;border:1px solid #d4d4d8;border-radius:12px;font-size:16px;background:#fff}
+
+/* MAPS */
+.map,.mapb{background:#f3e9cf;overflow:hidden}
+.map{position:absolute}
+.mapb{position:relative}
+.map svg,.mapb svg{position:absolute;top:0;left:0;width:100%;height:100%}
+.dot{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#0b4a24;border:2px solid #fff}
+.dot.c{width:20px;height:20px;margin:-10px 0 0 -10px;background:#d32f2f}
+.pl{position:absolute;width:80px;margin-left:-40px;margin-top:7px;text-align:center;font-size:10px;font-weight:bold;color:#0b4a24}
+.bb{position:absolute;font-size:20px;margin:-12px 0 0 -12px}
+
+/* TRACK */
+#trinfo{position:absolute;top:64px;left:0;right:0;height:50px;padding:15px 16px;background:#fff;border-bottom:1px solid #eee;font-size:15px}
+#tr .map{top:114px;left:0;right:0;bottom:150px}
+#trcard{position:absolute;left:0;right:0;bottom:0;height:150px;background:#fff;padding:14px 16px;box-shadow:0 -2px 6px rgba(0,0,0,.1)}
+.eta{background:#4caf50;color:#fff;padding:3px 10px;border-radius:4px;font-weight:bold}
+#bus{position:absolute;font-size:28px;margin-left:-14px;margin-top:-14px}
+.card{background:#fff;margin:12px 14px;padding:14px;border-radius:14px;box-shadow:0 1px 5px rgba(0,0,0,.12)}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ONBOARDING -->
+<div class="scr on" id="ob">
+  <div class="ph">
+    <div class="ill" id="oi">🚌</div>
+    <div class="dots"><span class="on"></span><span></span><span></span></div>
+    <h2 id="ot">Tikidh Fudud</h2>
+    <p id="od">Si fudud u dalbo tikidhkaaga, dalabku waa degdeg, ammaan iyo hufan.</p>
+    <div class="row" id="orow"><span class="skip" onclick="tab('hm')">Ka bood</span><button onclick="nextOb()">›</button></div>
+    <div id="obtn" style="display:none">
+      <button class="btn" onclick="tab('hm')">Diiwaangeli</button>
+      <button class="btn o" onclick="tab('hm')">Gal</button>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="scr tab" id="hm">
+  <div class="big">
+    <div class="logo">🚌 RAAC SMART<button class="bell" onclick="alert('Digniin ma jirto')">🔔</button></div>
+    <h1>Safarkaaga qorshee.</h1>
+    <p>Waqtigaaga ilaali, safarkaagana qorshee.</p>
+  </div>
+  <div class="plan">
+    <div class="tt">Xaggee u socotaa? <span class="demo">DEMO</span></div>
+    <label>Meesha aad ka baxayso</label>
+    <input id="from" value="Suuqa">
+    <button class="sw" onclick="swap()">⇅ Beddel jihada</button>
+    <label>Meesha aad u socoto</label>
+    <input id="to" placeholder="Geli goobta aad u socoto">
+    <label>Waqtiga aad rabto inaad gaadho</label>
+    <input id="when" type="time" value="07:00">
+    <button class="btn" onclick="doSearch()">🔍 Raadi safarkayga</button>
+    <button class="btn o" onclick="push('tk')">🎫 Tikidhadayda</button>
+  </div>
+  <div class="sec">Dhawaan</div>
+  <div class="rec" id="rec"></div>
+  <div class="foot">RAAC SMART · HARGEISA<br>Waa demo naqshadeed; weli kuma xidhna GPS ama basas dhab ah.</div>
+</div>
+
+<!-- ROUTES -->
+<div class="scr tab fx" id="rt">
+  <div class="hd nb"><h3>Jidadka basaska</h3></div>
+  <div class="body">
+    <input class="srch" id="rq" placeholder="Raadi jid ama xaafad" oninput="drawRoutes()">
+    <div id="rtl"></div>
+  </div>
+</div>
+
+<!-- TIME -->
+<div class="scr tab fx" id="tm">
+  <div class="hd nb"><h3>Waqtiga baxitaannada</h3></div>
+  <div class="body">
+    <select id="stopSel" onchange="renderTm()"></select>
+    <div class="mapb" style="height:110px">
+      <svg viewBox="0 0 300 110" preserveAspectRatio="none" stroke="#fff" fill="none" stroke-width="5"><path d="M0 80 L300 30"/><path d="M130 0 L160 110"/></svg>
+      <div class="dot c" style="left:50%;top:50%"></div>
+    </div>
+    <div class="bar">Baxitaannada soo socda</div>
+    <div id="tml"></div>
+  </div>
+</div>
+
+<!-- BUSES -->
+<div class="scr tab fx" id="bs">
+  <div class="hd nb"><h3>Basaska Hargeysa</h3></div>
+  <div class="body">
+    <div class="mapb" id="bmap" style="height:300px"></div>
+    <div class="bar">Basaska hadda socda</div>
+    <div id="bsl"></div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="scr fx" id="rs">
+  <div class="hd"><button class="b" onclick="back()">←</button><h3>Natiijada safarka</h3></div>
+  <div class="body" id="rsb"></div>
+</div>
+
+<!-- TRACK -->
+<div class="scr fx" id="tr">
+  <div class="hd"><button class="b" onclick="back()">←</button><h3>RAADI BASKAYGA</h3></div>
+  <div id="trinfo"><b class="g" id="trl">H-1</b> ka baxaya <b id="trf">Suuqa</b> <span class="eta" id="tre">4 daq.</span></div>
+  <div class="map">
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" fill="none">
+      <path d="M0 70 L100 55" stroke="#fff" stroke-width="3"/>
+      <path d="M30 0 L45 100" stroke="#fff" stroke-width="3"/>
+      <path d="M10 90 L85 10" stroke="#1e88e5" stroke-width="2"/>
+    </svg>
+    <div class="dot" style="left:10%;top:90%"></div><div class="pl" style="left:10%;top:90%" id="tp1">Suuqa</div>
+    <div class="dot" style="left:85%;top:10%"></div><div class="pl" style="left:85%;top:10%" id="tp2">Pepsiga</div>
+    <div id="bus">🚌</div>
+  </div>
+  <div id="trcard">
+    <b>Xiga: <span id="trn">Pepsiga</span></b><br>
+    <small style="color:#666" id="trx">Baska waa socdaa, wuxuu kuu soo dhow yahay.</small>
+    <button class="btn" style="margin-top:12px" onclick="buy()">🎫 Iibso tikidh</button>
+  </div>
+</div>
+
+<!-- TICKETS -->
+<div class="scr fx" id="tk">
+  <div class="hd"><button class="b" onclick="back()">←</button><h3>Tikidhadayda</h3></div>
+  <div class="body">
+    <div id="tkl"></div>
+    <div style="padding:0 14px 20px"><button class="btn o" onclick="clearT()">Tirtir tikidhada</button></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div id="nav">
+  <button id="n_hm" onclick="tab('hm')"><b>📍</b>Raadi</button>
+  <button id="n_rt" onclick="tab('rt')"><b>🗺️</b>Jidadka</button>
+  <button id="n_tm" onclick="tab('tm')"><b>🕒</b>Waqtiga</button>
+  <button id="n_bs" onclick="tab('bs')"><b>🚌</b>Basaska</button>
+</div>
+
+</div>
+
+<script>
+/* ===== XOGTA ===== */
+var P=[["Magaalo Ugaaso",8],["Jigjiga Yar",10],["Caalamada",12],["Ina Mooge",14],["New Hargeisa",16],["Sheedaha",12],["Daloodho",15],["Gantaalaha",18],["Pepsiga",20],["Maslaha",9]];
+var obI=[["🚌","Tikidh Fudud","Si fudud u dalbo tikidhkaaga, dalabku waa degdeg, ammaan iyo hufan."],
+["💳","Lacag-bixin Dabacsan","Si fudud ugu bixi tikidhkaaga kaarka ama bangiga internetka."],
+["🗺️","Raadi Jidkaaga","Adigu dooro meesha aad tegayso, inta kale annaga ayaa qabanaya."]];
+var oi=0,RES=[],TML=[],CUR=[],hist=[],cur="ob";
+var TABS={hm:1,rt:1,tm:1,bs:1};
+
+function $(id){return document.getElementById(id)}
+function pad(n){return n<10?"0"+n:""+n}
+function fmt(w){var d=new Date(Date.now()+w*60000);return pad(d.getHours())+":"+pad(d.getMinutes())}
+function wt(w){return w<=0?"Hadda":w+" daq."}
+function code(k){return "H-"+(k+1)}
+
+/* Jadwal: bas kasta 15 daqiiqo kasta */
+function nowMin(){return Math.floor(Date.now()/60000)}
+function off(k,d){return (k*2+d*7)%15}
+function nextWait(k,d,after){
+  var m=nowMin(),o=off(k,d),t=m+after;
+  var nx=o+Math.ceil((t-o)/15)*15;
+  return nx-m;
+}
+function trip(k,d,after){
+  return {c:code(k),f:d?P[k][0]:"Suuqa",t:d?"Suuqa":P[k][0],w:nextWait(k,d,after),r:P[k][1],k:k,d:d};
+}
+function idxOf(s){
+  for(var i=0;i<P.length;i++){if(P[i][0].toLowerCase().indexOf(s)>-1)return i}
+  return -1;
+}
+
+/* ===== NAVIGATION ===== */
+function go(id){
+  stopTrack();stopBuses();
+  var s=document.querySelectorAll(".scr");
+  for(var i=0;i<s.length;i++){s[i].classList.remove("on")}
+  $(id).classList.add("on");
+  cur=id;
+  $("nav").style.display=TABS[id]?"block":"none";
+  var nb=document.querySelectorAll("#nav button");
+  for(var j=0;j<nb.length;j++){nb[j].classList.remove("on")}
+  if(TABS[id]){$("n_"+id).classList.add("on")}
+  if(id=="rt")drawRoutes();
+  if(id=="tm")renderTm();
+  if(id=="bs"){drawBusList();startBuses()}
+  if(id=="tk")drawT();
+}
+function tab(id){hist=[];go(id)}
+function push(id){hist.push(cur);go(id)}
+function back(){var p=hist.pop()||"hm";go(p)}
+
+/* ===== ONBOARDING ===== */
+function nextOb(){
+  oi++;
+  if(oi>2){tab("hm");return}
+  $("oi").textContent=obI[oi][0];
+  $("ot").textContent=obI[oi][1];
+  $("od").textContent=obI[oi][2];
+  var d=document.querySelectorAll(".dots span");
+  for(var i=0;i<d.length;i++){
+    if(i==oi){d[i].classList.add("on")}else{d[i].classList.remove("on")}
+  }
+  if(oi==2){$("orow").style.display="none";$("obtn").style.display="block"}
+}
+
+/* ===== HOME ===== */
+function swap(){var a=$("from"),b=$("to");var t=a.value;a.value=b.value;b.value=t}
+function fill(a,b){$("from").value=a;$("to").value=b}
+(function(){
+  var h="";
+  for(var k=0;k<P.length;k++){
+    h+='<div onclick="fill(\'Suuqa\',\''+P[k][0]+'\')">○ Suuqa<br>○ '+P[k][0]+'</div>';
+  }
+  $("rec").innerHTML=h;
+  var d=new Date(Date.now()+3600000);
+  $("when").value=pad(d.getHours())+":"+pad(d.getMinutes());
+})();
+
+function want(){
+  var v=$("when").value;
+  if(!v||v.indexOf(":")<0)return null;
+  var p=v.split(":");
+  var x=parseInt(p[0],10)*60+parseInt(p[1],10);
+  if(isNaN(x))return null;
+  var d=new Date();
+  return (x-(d.getHours()*60+d.getMinutes())+1440)%1440;
+}
+
+/* ===== RAADI SAFARKA ===== */
+function doSearch(){
+  var f=$("from").value.trim().toLowerCase();
+  var t=$("to").value.trim().toLowerCase();
+  var W=want(),res=[],note="",k,d,n,y;
+  for(k=0;k<P.length;k++){
+    for(d=0;d<2;d++){
+      var x=trip(k,d,0);
+      if((!f||x.f.toLowerCase().indexOf(f)>-1)&&(!t||x.t.toLowerCase().indexOf(t)>-1)){
+        for(n=0;n<3;n++){y=trip(k,d,0);y.w+=15*n;res.push({legs:[y],dep:y.w,arr:y.w+y.r})}
+      }
+    }
+  }
+  if(!res.length&&f&&t){
+    var a=idxOf(f),b=idxOf(t);
+    if(a>-1&&b>-1&&a!=b){
+      for(n=0;n<3;n++){
+        var l1=trip(a,1,0);l1.w+=15*n;
+        var l2=trip(b,0,l1.w+l1.r+2);
+        res.push({legs:[l1,l2],dep:l1.w,arr:l2.w+l2.r});
+      }
+    }
+  }
+  if(!res.length){
+    note='<div class="note">Jid ka dhexeeya labadan ma helin. Waa kuu muujinayaa dhammaan basaska.</div>';
+    for(k=0;k<P.length;k++){for(d=0;d<2;d++){y=trip(k,d,0);res.push({legs:[y],dep:y.w,arr:y.w+y.r})}}
+  }
+  res.sort(function(p,q){return p.dep-q.dep});
+  RES=res;
+  var h=note;
+  if(W!==null){h+='<div class="card" style="margin-bottom:0">Waqtiga aad rabto inaad gaadho: <b>'+$("when").value+'</b></div>'}
+  for(var i=0;i<res.length;i++){
+    var r=res[i],L=r.legs;
+    var title=L.length>1?L[0].c+" + "+L[1].c:L[0].c;
+    var sub=L.length>1?L[0].f+" → Suuqa → "+L[1].t+" (isbeddel Suuqa)":L[0].f+" → "+L[0].t;
+    var badge="";
+    if(W!==null){badge=r.arr<=W?'<span class="ok">✓ Waqtigaaga ku jira</span>':'<span class="late">⚠ Way daahaysaa</span>'}
+    h+='<div class="it" onclick="openRes('+i+')"><b>'+title+'</b><small>'+sub+'</small><small>Baxaya '+fmt(r.dep)+' · Gaadhaya '+fmt(r.arr)+'</small>'+badge+'<span class="min">'+wt(r.dep)+'</span></div>';
+  }
+  $("rsb").innerHTML=h;
+  if(cur=="rs"){go("rs")}else{push("rs")}
+}
+function openRes(i){openTrack(RES[i].legs)}
+
+/* ===== JIDADKA ===== */
+function drawRoutes(){
+  var q=$("rq").value.trim().toLowerCase(),h="";
+  for(var k=0;k<P.length;k++){
+    var txt=(code(k)+" suuqa "+P[k][0]).toLowerCase();
+    if(q&&txt.indexOf(q)<0)continue;
+    h+='<div class="it" onclick="routeGo('+k+')"><b>'+code(k)+'</b><small>Suuqa ⇄ '+P[k][0]+'</small><span class="min">›</span></div>';
+  }
+  $("rtl").innerHTML=h||'<div class="empty">Jid lama helin</div>';
+}
+function routeGo(k){
+  $("from").value="Suuqa";
+  $("to").value=P[k][0];
+  doSearch();
+}
+
+/* ===== WAQTIGA ===== */
+(function(){
+  var h='<option value="0">Suuqa</option>';
+  for(var k=0;k<P.length;k++){h+='<option value="'+(k+1)+'">'+P[k][0]+'</option>'}
+  $("stopSel").innerHTML=h;
+})();
+function renderTm(){
+  var s=parseInt($("stopSel").value,10),list=[],k,n,x;
+  if(s==0){
+    for(k=0;k<P.length;k++){list.push(trip(k,0,0))}
+  }else{
+    for(n=0;n<4;n++){x=trip(s-1,1,0);x.w+=15*n;list.push(x)}
+  }
+  list.sort(function(a,b){return a.w-b.w});
+  TML=list;
+  var h="";
+  for(var i=0;i<list.length;i++){
+    var t=list[i];
+    h+='<div class="it" onclick="openOne('+i+')"><b>'+t.c+'</b><small>'+t.f+' → '+t.t+' · '+fmt(t.w)+'</small><span class="min">'+wt(t.w)+'</span></div>';
+  }
+  $("tml").innerHTML=h;
+}
+function openOne(i){openTrack([TML[i]])}
+
+/* ===== BASASKA (khariidad) ===== */
+var PX=[],PY=[],btimer=null;
+(function(){
+  var svg='<svg viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" stroke="#fff" stroke-width="2">',
+      lb="",k;
+  for(k=0;k<P.length;k++){
+    var a=k*2*Math.PI/P.length-Math.PI/2;
+    PX[k]=50+36*Math.cos(a);
+    PY[k]=50+36*Math.sin(a);
+    svg+='<line x1="50" y1="50" x2="'+PX[k]+'" y2="'+PY[k]+'"/>';
+    lb+='<div class="dot" style="left:'+PX[k]+'%;top:'+PY[k]+'%"></div><div class="pl" style="left:'+PX[k]+'%;top:'+PY[k]+'%">'+P[k][0]+'</div>';
+  }
+  svg+='</svg>';
+  lb+='<div class="dot c" style="left:50%;top:50%"></div><div class="pl" style="left:50%;top:50%;color:#d32f2f">SUUQA</div>';
+  var bb="";
+  for(k=0;k<P.length;k++){bb+='<div class="bb" id="bb'+k+'">🚌</div>'}
+  $("bmap").innerHTML=svg+lb+bb;
+})();
+function moveBuses(){
+  for(var k=0;k<P.length;k++){
+    var ph=(Date.now()/(9000+k*700)+k*0.13)%2;
+    var t=ph<1?ph:2-ph;
+    var b=$("bb"+k);
+    b.style.left=(50+(PX[k]-50)*t)+"%";
+    b.style.top=(50+(PY[k]-50)*t)+"%";
+  }
+}
+function startBuses(){stopBuses();moveBuses();btimer=setInterval(moveBuses,150)}
+function stopBuses(){if(btimer){clearInterval(btimer);btimer=null}}
+function drawBusList(){
+  var h="";
+  for(var k=0;k<P.length;k++){
+    var t=trip(k,0,0);
+    h+='<div class="it" onclick="openOne2('+k+')"><b>🚌 '+code(k)+'</b><small>Suuqa ⇄ '+P[k][0]+'</small><span class="min">'+wt(t.w)+'</span></div>';
+  }
+  $("bsl").innerHTML=h;
+}
+function openOne2(k){openTrack([trip(k,0,0)])}
+
+/* ===== RAADI BASKAYGA ===== */
+var timer=null,prog=0;
+function moveBus(){
+  prog+=0.004;
+  if(prog>1){prog=0}
+  var b=$("bus");
+  b.style.left=(10+prog*75)+"%";
+  b.style.top=(90-prog*80)+"%";
+}
+function stopTrack(){if(timer){clearInterval(timer);timer=null}}
+function openTrack(legs){
+  CUR=legs;
+  var a=legs[0],z=legs[legs.length-1];
+  $("trl").textContent=a.c;
+  $("trf").textContent=a.f;
+  $("tre").textContent=wt(a.w);
+  $("trn").textContent=z.t;
+  $("tp1").textContent=a.f;
+  $("tp2").textContent=legs.length>1?"Suuqa":a.t;
+  $("trx").textContent=legs.length>1?"Isbeddel Suuqa: kaxeeya "+z.c+" una socda "+z.t+".":"Baska waa socdaa, wuxuu kuu soo dhow yahay.";
+  push("tr");
+  prog=0;moveBus();
+  timer=setInterval(moveBus,100);
+}
+
+/* ===== TIKIDHADA ===== */
+var T=[];
+try{T=JSON.parse(localStorage.getItem("tk2")||"[]")}catch(e){}
+function saveT(){try{localStorage.setItem("tk2",JSON.stringify(T))}catch(e){}}
+function label(L){
+  if(L.length>1){return L[0].f+" → Suuqa → "+L[1].t+" ("+L[0].c+" + "+L[1].c+")"}
+  return L[0].f+" → "+L[0].t+" ("+L[0].c+")";
+}
+function buy(){
+  if(!CUR.length)return;
+  T.unshift({r:label(CUR),d:new Date().toLocaleString()});
+  saveT();
+  alert("Tikidhkaaga waa la kaydiyay ✓");
+}
+function drawT(){
+  var h="";
+  if(!T.length){h='<div class="empty">Tikidh weli ma haysatid</div>'}
+  else{
+    for(var i=0;i<T.length;i++){
+      h+='<div class="it" style="padding-right:16px"><b>🎫 '+T[i].r+'</b><small>'+T[i].d+'</small></div>';
+    }
+  }
+  $("tkl").innerHTML=h;
+}
+function clearT(){
+  if(confirm("Ma hubtaa inaad tirtirto tikidhada?")){T=[];saveT();drawT()}
+}
+</script>
