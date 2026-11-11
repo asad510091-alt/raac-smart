@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#176B3A">
 <title>RAAC SMART</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;height:100%;font-family:Arial,sans-serif;background:#111;color:#171717}
@@ -18,7 +20,7 @@ html,body{margin:0;padding:0;height:100%;font-family:Arial,sans-serif;background
 .btn.o{background:#fff;color:#176B3A;border:1px solid #176B3A}
 
 /* NAV */
-#nav{display:none;position:absolute;left:0;right:0;bottom:0;height:60px;background:#fff;border-top:1px solid #ddd}
+#nav{display:none;position:absolute;left:0;right:0;bottom:0;height:60px;background:#fff;border-top:1px solid #ddd;z-index:1200}
 #nav button{float:left;width:25%;height:60px;border:0;background:#fff;color:#777;font-size:12px;padding:0}
 #nav button b{display:block;font-size:20px;line-height:26px}
 #nav button.on{color:#176B3A;font-weight:bold}
@@ -36,15 +38,34 @@ html,body{margin:0;padding:0;height:100%;font-family:Arial,sans-serif;background
 .row .skip{float:left;padding:8px 0}
 .row button{float:right;border:1px solid #bbb;background:#fff;border-radius:8px;width:38px;height:38px;font-size:18px}
 
-/* HOME */
+/* MAP SCREEN */
+#map,#tmap{position:absolute;top:0;left:0;right:0;background:#e5e3df}
+#map{bottom:230px}
+#sheet{position:absolute;left:0;right:0;bottom:0;height:230px;background:#fff;padding:12px 14px;overflow:auto;z-index:1100;box-shadow:0 -2px 8px rgba(0,0,0,.2)}
+#sheet .st{font-size:13px;color:#666;margin-bottom:4px}
+#nr{font-size:15px;line-height:20px;min-height:42px}
+#nr2{margin:6px 0 0;white-space:nowrap;overflow-x:auto}
+.chip2{display:inline-block;margin-right:6px;padding:6px 10px;background:#e8f5ec;color:#176B3A;border-radius:14px;font-size:12px}
+.two{margin:10px 0 6px;overflow:hidden}
+.two button{float:left;width:48%;margin-right:4%;padding:13px 0;border:1px solid #176B3A;border-radius:12px;background:#176B3A;color:#fff;font-size:14px;font-weight:bold}
+.two button.last{margin-right:0;background:#fff;color:#176B3A}
+.lnk{border:0;background:none;color:#888;font-size:12px;padding:6px 0}
+#ebtn{position:absolute;top:10px;right:10px;z-index:1100;padding:9px 12px;border:0;border-radius:18px;background:#fff;color:#176B3A;font-size:13px;font-weight:bold;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+#ebar{display:none;position:absolute;top:54px;left:10px;right:10px;z-index:1100;background:#fef3c7;color:#92400e;font-size:12px;padding:8px 10px;border-radius:10px}
+.sd{background:#0b4a24;border:3px solid #fff;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.sd.s{background:#d32f2f}
+.me{background:#1e88e5;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 6px rgba(30,136,229,.25)}
+.bm{font-size:22px;line-height:24px;text-align:center}
+.lbl{background:rgba(255,255,255,.92);border:0;box-shadow:none;font-size:10px;font-weight:bold;color:#0b4a24;padding:1px 4px}
+.pb{display:block;margin-top:6px;padding:8px 12px;border:0;border-radius:8px;background:#176B3A;color:#fff;font-size:13px}
+
+/* HOME / PLANNER */
 .big{background:#176B3A;background:linear-gradient(#1f8a4c,#176B3A);color:#fff;padding:20px 20px 36px;border-radius:0 0 26px 26px}
 .big .logo{font-size:16px;font-weight:bold;letter-spacing:1px;overflow:hidden}
-.big .bell{float:right;border:0;background:none;color:#fff;font-size:20px;padding:0}
-.big h1{margin:20px 0 6px;font-size:30px}
+.big h1{margin:20px 0 6px;font-size:28px}
 .big p{margin:0;opacity:.92;font-size:15px}
 .plan{position:relative;background:#fff;margin:-18px 14px 14px;border-radius:18px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.14)}
 .plan .tt{overflow:hidden;font-weight:bold;font-size:18px}
-.demo{float:right;background:#dcfce7;color:#15803d;font-size:11px;font-weight:bold;padding:4px 10px;border-radius:12px}
 .plan label{display:block;font-size:13px;color:#666;margin-top:12px}
 .plan input{display:block;width:100%;padding:13px;margin-top:6px;border:1px solid #d4d4d8;border-radius:12px;font-size:16px;background:#fff;outline:0}
 .sw{display:block;margin:12px auto 0;border:1px solid #176B3A;background:#fff;color:#176B3A;border-radius:18px;padding:7px 18px;font-size:14px}
@@ -71,24 +92,13 @@ html,body{margin:0;padding:0;height:100%;font-family:Arial,sans-serif;background
 .empty{text-align:center;color:#888;padding:28px}
 .srch{display:block;width:calc(100% - 28px);margin:12px 14px;padding:12px;border:1px solid #d4d4d8;border-radius:12px;font-size:16px;background:#fff}
 select{display:block;width:calc(100% - 28px);margin:12px 14px;padding:12px;border:1px solid #d4d4d8;border-radius:12px;font-size:16px;background:#fff}
-
-/* MAPS */
-.map,.mapb{background:#f3e9cf;overflow:hidden}
-.map{position:absolute}
-.mapb{position:relative}
-.map svg,.mapb svg{position:absolute;top:0;left:0;width:100%;height:100%}
-.dot{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#0b4a24;border:2px solid #fff}
-.dot.c{width:20px;height:20px;margin:-10px 0 0 -10px;background:#d32f2f}
-.pl{position:absolute;width:80px;margin-left:-40px;margin-top:7px;text-align:center;font-size:10px;font-weight:bold;color:#0b4a24}
-.bb{position:absolute;font-size:20px;margin:-12px 0 0 -12px}
+.card{background:#fff;margin:12px 14px;padding:14px;border-radius:14px;box-shadow:0 1px 5px rgba(0,0,0,.12)}
 
 /* TRACK */
 #trinfo{position:absolute;top:64px;left:0;right:0;height:50px;padding:15px 16px;background:#fff;border-bottom:1px solid #eee;font-size:15px}
-#tr .map{top:114px;left:0;right:0;bottom:150px}
+#tmap{top:114px;bottom:150px}
 #trcard{position:absolute;left:0;right:0;bottom:0;height:150px;background:#fff;padding:14px 16px;box-shadow:0 -2px 6px rgba(0,0,0,.1)}
 .eta{background:#4caf50;color:#fff;padding:3px 10px;border-radius:4px;font-weight:bold}
-#bus{position:absolute;font-size:28px;margin-left:-14px;margin-top:-14px}
-.card{background:#fff;margin:12px 14px;padding:14px;border-radius:14px;box-shadow:0 1px 5px rgba(0,0,0,.12)}
 </style>
 </head>
 <body>
@@ -101,25 +111,43 @@ select{display:block;width:calc(100% - 28px);margin:12px 14px;padding:12px;borde
     <div class="dots"><span class="on"></span><span></span><span></span></div>
     <h2 id="ot">Tikidh Fudud</h2>
     <p id="od">Si fudud u dalbo tikidhkaaga, dalabku waa degdeg, ammaan iyo hufan.</p>
-    <div class="row" id="orow"><span class="skip" onclick="tab('hm')">Ka bood</span><button onclick="nextOb()">›</button></div>
+    <div class="row" id="orow"><span class="skip" onclick="tab('mp')">Ka bood</span><button onclick="nextOb()">›</button></div>
     <div id="obtn" style="display:none">
-      <button class="btn" onclick="tab('hm')">Diiwaangeli</button>
-      <button class="btn o" onclick="tab('hm')">Gal</button>
+      <button class="btn" onclick="tab('mp')">Diiwaangeli</button>
+      <button class="btn o" onclick="tab('mp')">Gal</button>
     </div>
   </div>
 </div>
 
-<!-- HOME -->
+<!-- KHARIIDAD -->
+<div class="scr tab fx" id="mp">
+  <div id="map"></div>
+  <button id="ebtn" onclick="toggleEdit()">✏ Hagaaji goobaha</button>
+  <div id="ebar">Dhaqaaji dhibcaha si aad goobta saxda ah ugu dhigto, kadibna taabo ✔ Dhammee.</div>
+  <div id="sheet">
+    <div class="st">📍 Saldhigga ugu dhow</div>
+    <div id="nr">Riix "Goobtayda" si aad u ogaato meesha aad joogto iyo saldhigga kuu dhow.</div>
+    <div id="nr2"></div>
+    <div class="two">
+      <button onclick="locate()">📍 Goobtayda</button>
+      <button class="last" onclick="fromHere()">🚌 Halkan ka raadi</button>
+    </div>
+    <button class="lnk" onclick="resetST()">↺ Dib u dhig goobihii hore</button>
+  </div>
+</div>
+
+<!-- RAADI -->
 <div class="scr tab" id="hm">
   <div class="big">
-    <div class="logo">🚌 RAAC SMART<button class="bell" onclick="alert('Digniin ma jirto')">🔔</button></div>
+    <div class="logo">🚌 RAAC SMART</div>
     <h1>Safarkaaga qorshee.</h1>
     <p>Waqtigaaga ilaali, safarkaagana qorshee.</p>
   </div>
   <div class="plan">
-    <div class="tt">Xaggee u socotaa? <span class="demo">DEMO</span></div>
+    <div class="tt">Xaggee u socotaa?</div>
     <label>Meesha aad ka baxayso</label>
     <input id="from" value="Suuqa">
+    <button class="sw" onclick="useNear()">📍 Isticmaal saldhigga kuu dhow</button>
     <button class="sw" onclick="swap()">⇅ Beddel jihada</button>
     <label>Meesha aad u socoto</label>
     <input id="to" placeholder="Geli goobta aad u socoto">
@@ -130,10 +158,10 @@ select{display:block;width:calc(100% - 28px);margin:12px 14px;padding:12px;borde
   </div>
   <div class="sec">Dhawaan</div>
   <div class="rec" id="rec"></div>
-  <div class="foot">RAAC SMART · HARGEISA<br>Waa demo naqshadeed; weli kuma xidhna GPS ama basas dhab ah.</div>
+  <div class="foot">RAAC SMART · HARGEISA</div>
 </div>
 
-<!-- ROUTES -->
+<!-- JIDADKA -->
 <div class="scr tab fx" id="rt">
   <div class="hd nb"><h3>Jidadka basaska</h3></div>
   <div class="body">
@@ -142,58 +170,35 @@ select{display:block;width:calc(100% - 28px);margin:12px 14px;padding:12px;borde
   </div>
 </div>
 
-<!-- TIME -->
+<!-- WAQTIGA -->
 <div class="scr tab fx" id="tm">
   <div class="hd nb"><h3>Waqtiga baxitaannada</h3></div>
   <div class="body">
     <select id="stopSel" onchange="renderTm()"></select>
-    <div class="mapb" style="height:110px">
-      <svg viewBox="0 0 300 110" preserveAspectRatio="none" stroke="#fff" fill="none" stroke-width="5"><path d="M0 80 L300 30"/><path d="M130 0 L160 110"/></svg>
-      <div class="dot c" style="left:50%;top:50%"></div>
-    </div>
     <div class="bar">Baxitaannada soo socda</div>
     <div id="tml"></div>
   </div>
 </div>
 
-<!-- BUSES -->
-<div class="scr tab fx" id="bs">
-  <div class="hd nb"><h3>Basaska Hargeysa</h3></div>
-  <div class="body">
-    <div class="mapb" id="bmap" style="height:300px"></div>
-    <div class="bar">Basaska hadda socda</div>
-    <div id="bsl"></div>
-  </div>
-</div>
-
-<!-- RESULTS -->
+<!-- NATIIJADA -->
 <div class="scr fx" id="rs">
   <div class="hd"><button class="b" onclick="back()">←</button><h3>Natiijada safarka</h3></div>
   <div class="body" id="rsb"></div>
 </div>
 
-<!-- TRACK -->
+<!-- RAADI BASKAYGA -->
 <div class="scr fx" id="tr">
   <div class="hd"><button class="b" onclick="back()">←</button><h3>RAADI BASKAYGA</h3></div>
   <div id="trinfo"><b class="g" id="trl">H-1</b> ka baxaya <b id="trf">Suuqa</b> <span class="eta" id="tre">4 daq.</span></div>
-  <div class="map">
-    <svg viewBox="0 0 100 100" preserveAspectRatio="none" fill="none">
-      <path d="M0 70 L100 55" stroke="#fff" stroke-width="3"/>
-      <path d="M30 0 L45 100" stroke="#fff" stroke-width="3"/>
-      <path d="M10 90 L85 10" stroke="#1e88e5" stroke-width="2"/>
-    </svg>
-    <div class="dot" style="left:10%;top:90%"></div><div class="pl" style="left:10%;top:90%" id="tp1">Suuqa</div>
-    <div class="dot" style="left:85%;top:10%"></div><div class="pl" style="left:85%;top:10%" id="tp2">Pepsiga</div>
-    <div id="bus">🚌</div>
-  </div>
+  <div id="tmap"></div>
   <div id="trcard">
     <b>Xiga: <span id="trn">Pepsiga</span></b><br>
-    <small style="color:#666" id="trx">Baska waa socdaa, wuxuu kuu soo dhow yahay.</small>
+    <small style="color:#666" id="trx">Baska waa socdaa.</small>
     <button class="btn" style="margin-top:12px" onclick="buy()">🎫 Iibso tikidh</button>
   </div>
 </div>
 
-<!-- TICKETS -->
+<!-- TIKIDHADA -->
 <div class="scr fx" id="tk">
   <div class="hd"><button class="b" onclick="back()">←</button><h3>Tikidhadayda</h3></div>
   <div class="body">
@@ -202,24 +207,50 @@ select{display:block;width:calc(100% - 28px);margin:12px 14px;padding:12px;borde
   </div>
 </div>
 
-<!-- NAV -->
 <div id="nav">
-  <button id="n_hm" onclick="tab('hm')"><b>📍</b>Raadi</button>
-  <button id="n_rt" onclick="tab('rt')"><b>🗺️</b>Jidadka</button>
+  <button id="n_mp" onclick="tab('mp')"><b>🗺️</b>Khariidad</button>
+  <button id="n_hm" onclick="tab('hm')"><b>🔍</b>Raadi</button>
+  <button id="n_rt" onclick="tab('rt')"><b>🚌</b>Jidadka</button>
   <button id="n_tm" onclick="tab('tm')"><b>🕒</b>Waqtiga</button>
-  <button id="n_bs" onclick="tab('bs')"><b>🚌</b>Basaska</button>
 </div>
 
 </div>
 
 <script>
-/* ===== XOGTA ===== */
-var P=[["Magaalo Ugaaso",8],["Jigjiga Yar",10],["Caalamada",12],["Ina Mooge",14],["New Hargeisa",16],["Sheedaha",12],["Daloodho",15],["Gantaalaha",18],["Pepsiga",20],["Maslaha",9]];
+/* ===== SALDHIGYADA (goobo isku-dhow; hagaaji khariidadda) ===== */
+var ST=[
+{n:"Suuqa",a:9.5624,o:44.0649},
+{n:"Magaalo Ugaaso",a:9.5735,o:44.0715},
+{n:"Jigjiga Yar",a:9.5655,o:44.0805},
+{n:"Caalamada",a:9.5570,o:44.0560},
+{n:"Ina Mooge",a:9.5600,o:44.0955},
+{n:"New Hargeisa",a:9.5430,o:44.0500},
+{n:"Sheedaha",a:9.5800,o:44.0600},
+{n:"Daloodho",a:9.5360,o:44.0680},
+{n:"Gantaalaha",a:9.5700,o:44.0480},
+{n:"Pepsiga",a:9.5460,o:44.0830},
+{n:"Maslaha",a:9.5500,o:44.0620}
+];
+var NR=ST.length-1;
+try{
+  var sv=JSON.parse(localStorage.getItem("st1")||"null");
+  if(sv&&sv.length==ST.length){for(var q=0;q<ST.length;q++){ST[q].a=sv[q][0];ST[q].o=sv[q][1]}}
+}catch(e){}
+function saveST(){
+  try{var o=[];for(var i=0;i<ST.length;i++){o.push([ST[i].a,ST[i].o])}localStorage.setItem("st1",JSON.stringify(o))}catch(e){}
+}
+function resetST(){
+  if(confirm("Ma hubtaa inaad dib u dhigto goobihii hore?")){
+    try{localStorage.removeItem("st1")}catch(e){}
+    location.reload();
+  }
+}
+
 var obI=[["🚌","Tikidh Fudud","Si fudud u dalbo tikidhkaaga, dalabku waa degdeg, ammaan iyo hufan."],
 ["💳","Lacag-bixin Dabacsan","Si fudud ugu bixi tikidhkaaga kaarka ama bangiga internetka."],
 ["🗺️","Raadi Jidkaaga","Adigu dooro meesha aad tegayso, inta kale annaga ayaa qabanaya."]];
 var oi=0,RES=[],TML=[],CUR=[],hist=[],cur="ob";
-var TABS={hm:1,rt:1,tm:1,bs:1};
+var TABS={mp:1,hm:1,rt:1,tm:1};
 
 function $(id){return document.getElementById(id)}
 function pad(n){return n<10?"0"+n:""+n}
@@ -227,7 +258,27 @@ function fmt(w){var d=new Date(Date.now()+w*60000);return pad(d.getHours())+":"+
 function wt(w){return w<=0?"Hadda":w+" daq."}
 function code(k){return "H-"+(k+1)}
 
-/* Jadwal: bas kasta 15 daqiiqo kasta */
+/* ===== MASAAFO ===== */
+function dist(a1,o1,a2,o2){
+  var R=6371000,r=Math.PI/180,dA=(a2-a1)*r,dO=(o2-o1)*r;
+  var h=Math.sin(dA/2)*Math.sin(dA/2)+Math.cos(a1*r)*Math.cos(a2*r)*Math.sin(dO/2)*Math.sin(dO/2);
+  return 2*R*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
+}
+function fd(m){return m<1000?Math.round(m)+" m":(m/1000).toFixed(1)+" km"}
+function dir(a1,o1,a2,o2){
+  var r=Math.PI/180,y=Math.sin((o2-o1)*r)*Math.cos(a2*r);
+  var x=Math.cos(a1*r)*Math.sin(a2*r)-Math.sin(a1*r)*Math.cos(a2*r)*Math.cos((o2-o1)*r);
+  var b=(Math.atan2(y,x)/r+360)%360;
+  var n=["Waqooyi","Waqooyi-Bari","Bari","Koonfur-Bari","Koonfur","Koonfur-Galbeed","Galbeed","Waqooyi-Galbeed"];
+  return n[Math.round(b/45)%8];
+}
+/* daqiiqadaha baska: masaafada Suuqa -> xaafadda */
+function ride(k){
+  var m=dist(ST[0].a,ST[0].o,ST[k+1].a,ST[k+1].o);
+  return Math.max(4,Math.round(m*1.3/1000/20*60)+3);
+}
+
+/* ===== JADWALKA: bas kasta 15 daqiiqo kasta ===== */
 function nowMin(){return Math.floor(Date.now()/60000)}
 function off(k,d){return (k*2+d*7)%15}
 function nextWait(k,d,after){
@@ -236,11 +287,15 @@ function nextWait(k,d,after){
   return nx-m;
 }
 function trip(k,d,after){
-  return {c:code(k),f:d?P[k][0]:"Suuqa",t:d?"Suuqa":P[k][0],w:nextWait(k,d,after),r:P[k][1],k:k,d:d};
+  return {c:code(k),f:d?ST[k+1].n:"Suuqa",t:d?"Suuqa":ST[k+1].n,w:nextWait(k,d,after),r:ride(k),k:k,d:d};
 }
 function idxOf(s){
-  for(var i=0;i<P.length;i++){if(P[i][0].toLowerCase().indexOf(s)>-1)return i}
+  for(var k=0;k<NR;k++){if(ST[k+1].n.toLowerCase().indexOf(s)>-1)return k}
   return -1;
+}
+function stopOf(name){
+  for(var i=0;i<ST.length;i++){if(ST[i].n==name)return ST[i]}
+  return ST[0];
 }
 
 /* ===== NAVIGATION ===== */
@@ -254,9 +309,9 @@ function go(id){
   var nb=document.querySelectorAll("#nav button");
   for(var j=0;j<nb.length;j++){nb[j].classList.remove("on")}
   if(TABS[id]){$("n_"+id).classList.add("on")}
+  if(id=="mp"){initMap();if(map){map.invalidateSize();startBuses()}}
   if(id=="rt")drawRoutes();
   if(id=="tm")renderTm();
-  if(id=="bs"){drawBusList();startBuses()}
   if(id=="tk")drawT();
 }
 function tab(id){hist=[];go(id)}
@@ -266,7 +321,7 @@ function back(){var p=hist.pop()||"hm";go(p)}
 /* ===== ONBOARDING ===== */
 function nextOb(){
   oi++;
-  if(oi>2){tab("hm");return}
+  if(oi>2){tab("mp");return}
   $("oi").textContent=obI[oi][0];
   $("ot").textContent=obI[oi][1];
   $("od").textContent=obI[oi][2];
@@ -277,202 +332,122 @@ function nextOb(){
   if(oi==2){$("orow").style.display="none";$("obtn").style.display="block"}
 }
 
-/* ===== HOME ===== */
-function swap(){var a=$("from"),b=$("to");var t=a.value;a.value=b.value;b.value=t}
-function fill(a,b){$("from").value=a;$("to").value=b}
-(function(){
-  var h="";
-  for(var k=0;k<P.length;k++){
-    h+='<div onclick="fill(\'Suuqa\',\''+P[k][0]+'\')">○ Suuqa<br>○ '+P[k][0]+'</div>';
-  }
-  $("rec").innerHTML=h;
-  var d=new Date(Date.now()+3600000);
-  $("when").value=pad(d.getHours())+":"+pad(d.getMinutes());
-})();
+/* ===== KHARIIDADDA ===== */
+var map=null,MK=[],LN=[],BM=[],meM=null,meLine=null,edit=false,btimer=null;
+var ME=null,NEAR=-1,watchId=null,firstFix=true;
 
-function want(){
-  var v=$("when").value;
-  if(!v||v.indexOf(":")<0)return null;
-  var p=v.split(":");
-  var x=parseInt(p[0],10)*60+parseInt(p[1],10);
-  if(isNaN(x))return null;
-  var d=new Date();
-  return (x-(d.getHours()*60+d.getMinutes())+1440)%1440;
+function initMap(){
+  if(map)return;
+  if(typeof L=="undefined"){
+    $("map").innerHTML='<div class="empty">Khariidadda waxay u baahan tahay internet.</div>';
+    return;
+  }
+  map=L.map("map").setView([ST[0].a,ST[0].o],13);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);
+  var k;
+  for(k=1;k<ST.length;k++){
+    LN[k]=L.polyline([[ST[0].a,ST[0].o],[ST[k].a,ST[k].o]],{color:"#2e9e5b",weight:3,opacity:.6}).addTo(map);
+  }
+  for(k=0;k<ST.length;k++){makeMarker(k)}
+  for(k=1;k<ST.length;k++){
+    BM[k]=L.marker([ST[0].a,ST[0].o],{icon:L.divIcon({className:"bm",html:"🚌",iconSize:[24,24],iconAnchor:[12,12]}),interactive:false,keyboard:false}).addTo(map);
+  }
+  if(ME){updateMe(false)}
 }
 
-/* ===== RAADI SAFARKA ===== */
-function doSearch(){
-  var f=$("from").value.trim().toLowerCase();
-  var t=$("to").value.trim().toLowerCase();
-  var W=want(),res=[],note="",k,d,n,y;
-  for(k=0;k<P.length;k++){
-    for(d=0;d<2;d++){
-      var x=trip(k,d,0);
-      if((!f||x.f.toLowerCase().indexOf(f)>-1)&&(!t||x.t.toLowerCase().indexOf(t)>-1)){
-        for(n=0;n<3;n++){y=trip(k,d,0);y.w+=15*n;res.push({legs:[y],dep:y.w,arr:y.w+y.r})}
-      }
-    }
-  }
-  if(!res.length&&f&&t){
-    var a=idxOf(f),b=idxOf(t);
-    if(a>-1&&b>-1&&a!=b){
-      for(n=0;n<3;n++){
-        var l1=trip(a,1,0);l1.w+=15*n;
-        var l2=trip(b,0,l1.w+l1.r+2);
-        res.push({legs:[l1,l2],dep:l1.w,arr:l2.w+l2.r});
-      }
-    }
-  }
-  if(!res.length){
-    note='<div class="note">Jid ka dhexeeya labadan ma helin. Waa kuu muujinayaa dhammaan basaska.</div>';
-    for(k=0;k<P.length;k++){for(d=0;d<2;d++){y=trip(k,d,0);res.push({legs:[y],dep:y.w,arr:y.w+y.r})}}
-  }
-  res.sort(function(p,q){return p.dep-q.dep});
-  RES=res;
-  var h=note;
-  if(W!==null){h+='<div class="card" style="margin-bottom:0">Waqtiga aad rabto inaad gaadho: <b>'+$("when").value+'</b></div>'}
-  for(var i=0;i<res.length;i++){
-    var r=res[i],L=r.legs;
-    var title=L.length>1?L[0].c+" + "+L[1].c:L[0].c;
-    var sub=L.length>1?L[0].f+" → Suuqa → "+L[1].t+" (isbeddel Suuqa)":L[0].f+" → "+L[0].t;
-    var badge="";
-    if(W!==null){badge=r.arr<=W?'<span class="ok">✓ Waqtigaaga ku jira</span>':'<span class="late">⚠ Way daahaysaa</span>'}
-    h+='<div class="it" onclick="openRes('+i+')"><b>'+title+'</b><small>'+sub+'</small><small>Baxaya '+fmt(r.dep)+' · Gaadhaya '+fmt(r.arr)+'</small>'+badge+'<span class="min">'+wt(r.dep)+'</span></div>';
-  }
-  $("rsb").innerHTML=h;
-  if(cur=="rs"){go("rs")}else{push("rs")}
+function makeMarker(i){
+  var sz=i?16:22,an=i?8:11;
+  var m=L.marker([ST[i].a,ST[i].o],{icon:L.divIcon({className:"sd"+(i?"":" s"),iconSize:[sz,sz],iconAnchor:[an,an]}),draggable:false}).addTo(map);
+  m.bindTooltip(ST[i].n,{permanent:true,direction:"top",offset:[0,-8],className:"lbl"});
+  m.bindPopup('<b>'+ST[i].n+'</b><br><button class="pb" onclick="gotoPlan('+i+')">🚌 Halkan u tag</button>');
+  m.on("dragend",function(){
+    var p=m.getLatLng();
+    ST[i].a=p.lat;ST[i].o=p.lng;
+    saveST();refreshLines();updateNear();
+  });
+  MK[i]=m;
 }
-function openRes(i){openTrack(RES[i].legs)}
-
-/* ===== JIDADKA ===== */
-function drawRoutes(){
-  var q=$("rq").value.trim().toLowerCase(),h="";
-  for(var k=0;k<P.length;k++){
-    var txt=(code(k)+" suuqa "+P[k][0]).toLowerCase();
-    if(q&&txt.indexOf(q)<0)continue;
-    h+='<div class="it" onclick="routeGo('+k+')"><b>'+code(k)+'</b><small>Suuqa ⇄ '+P[k][0]+'</small><span class="min">›</span></div>';
+function refreshLines(){
+  for(var k=1;k<ST.length;k++){
+    LN[k].setLatLngs([[ST[0].a,ST[0].o],[ST[k].a,ST[k].o]]);
   }
-  $("rtl").innerHTML=h||'<div class="empty">Jid lama helin</div>';
+  if(meLine&&NEAR>-1&&ME){meLine.setLatLngs([[ME[0],ME[1]],[ST[NEAR].a,ST[NEAR].o]])}
 }
-function routeGo(k){
-  $("from").value="Suuqa";
-  $("to").value=P[k][0];
-  doSearch();
+function toggleEdit(){
+  if(!map)return;
+  edit=!edit;
+  for(var i=0;i<MK.length;i++){
+    if(edit){MK[i].dragging.enable()}else{MK[i].dragging.disable()}
+  }
+  $("ebtn").textContent=edit?"✔ Dhammee":"✏ Hagaaji goobaha";
+  $("ebar").style.display=edit?"block":"none";
+  map.closePopup();
 }
 
-/* ===== WAQTIGA ===== */
-(function(){
-  var h='<option value="0">Suuqa</option>';
-  for(var k=0;k<P.length;k++){h+='<option value="'+(k+1)+'">'+P[k][0]+'</option>'}
-  $("stopSel").innerHTML=h;
-})();
-function renderTm(){
-  var s=parseInt($("stopSel").value,10),list=[],k,n,x;
-  if(s==0){
-    for(k=0;k<P.length;k++){list.push(trip(k,0,0))}
-  }else{
-    for(n=0;n<4;n++){x=trip(s-1,1,0);x.w+=15*n;list.push(x)}
-  }
-  list.sort(function(a,b){return a.w-b.w});
-  TML=list;
-  var h="";
-  for(var i=0;i<list.length;i++){
-    var t=list[i];
-    h+='<div class="it" onclick="openOne('+i+')"><b>'+t.c+'</b><small>'+t.f+' → '+t.t+' · '+fmt(t.w)+'</small><span class="min">'+wt(t.w)+'</span></div>';
-  }
-  $("tml").innerHTML=h;
-}
-function openOne(i){openTrack([TML[i]])}
-
-/* ===== BASASKA (khariidad) ===== */
-var PX=[],PY=[],btimer=null;
-(function(){
-  var svg='<svg viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" stroke="#fff" stroke-width="2">',
-      lb="",k;
-  for(k=0;k<P.length;k++){
-    var a=k*2*Math.PI/P.length-Math.PI/2;
-    PX[k]=50+36*Math.cos(a);
-    PY[k]=50+36*Math.sin(a);
-    svg+='<line x1="50" y1="50" x2="'+PX[k]+'" y2="'+PY[k]+'"/>';
-    lb+='<div class="dot" style="left:'+PX[k]+'%;top:'+PY[k]+'%"></div><div class="pl" style="left:'+PX[k]+'%;top:'+PY[k]+'%">'+P[k][0]+'</div>';
-  }
-  svg+='</svg>';
-  lb+='<div class="dot c" style="left:50%;top:50%"></div><div class="pl" style="left:50%;top:50%;color:#d32f2f">SUUQA</div>';
-  var bb="";
-  for(k=0;k<P.length;k++){bb+='<div class="bb" id="bb'+k+'">🚌</div>'}
-  $("bmap").innerHTML=svg+lb+bb;
-})();
 function moveBuses(){
-  for(var k=0;k<P.length;k++){
+  for(var k=1;k<ST.length;k++){
     var ph=(Date.now()/(9000+k*700)+k*0.13)%2;
     var t=ph<1?ph:2-ph;
-    var b=$("bb"+k);
-    b.style.left=(50+(PX[k]-50)*t)+"%";
-    b.style.top=(50+(PY[k]-50)*t)+"%";
+    BM[k].setLatLng([ST[0].a+(ST[k].a-ST[0].a)*t,ST[0].o+(ST[k].o-ST[0].o)*t]);
   }
 }
-function startBuses(){stopBuses();moveBuses();btimer=setInterval(moveBuses,150)}
+function startBuses(){stopBuses();if(!map)return;moveBuses();btimer=setInterval(moveBuses,300)}
 function stopBuses(){if(btimer){clearInterval(btimer);btimer=null}}
-function drawBusList(){
-  var h="";
-  for(var k=0;k<P.length;k++){
-    var t=trip(k,0,0);
-    h+='<div class="it" onclick="openOne2('+k+')"><b>🚌 '+code(k)+'</b><small>Suuqa ⇄ '+P[k][0]+'</small><span class="min">'+wt(t.w)+'</span></div>';
-  }
-  $("bsl").innerHTML=h;
-}
-function openOne2(k){openTrack([trip(k,0,0)])}
 
-/* ===== RAADI BASKAYGA ===== */
-var timer=null,prog=0;
-function moveBus(){
-  prog+=0.004;
-  if(prog>1){prog=0}
-  var b=$("bus");
-  b.style.left=(10+prog*75)+"%";
-  b.style.top=(90-prog*80)+"%";
-}
-function stopTrack(){if(timer){clearInterval(timer);timer=null}}
-function openTrack(legs){
-  CUR=legs;
-  var a=legs[0],z=legs[legs.length-1];
-  $("trl").textContent=a.c;
-  $("trf").textContent=a.f;
-  $("tre").textContent=wt(a.w);
-  $("trn").textContent=z.t;
-  $("tp1").textContent=a.f;
-  $("tp2").textContent=legs.length>1?"Suuqa":a.t;
-  $("trx").textContent=legs.length>1?"Isbeddel Suuqa: kaxeeya "+z.c+" una socda "+z.t+".":"Baska waa socdaa, wuxuu kuu soo dhow yahay.";
-  push("tr");
-  prog=0;moveBus();
-  timer=setInterval(moveBus,100);
-}
-
-/* ===== TIKIDHADA ===== */
-var T=[];
-try{T=JSON.parse(localStorage.getItem("tk2")||"[]")}catch(e){}
-function saveT(){try{localStorage.setItem("tk2",JSON.stringify(T))}catch(e){}}
-function label(L){
-  if(L.length>1){return L[0].f+" → Suuqa → "+L[1].t+" ("+L[0].c+" + "+L[1].c+")"}
-  return L[0].f+" → "+L[0].t+" ("+L[0].c+")";
-}
-function buy(){
-  if(!CUR.length)return;
-  T.unshift({r:label(CUR),d:new Date().toLocaleString()});
-  saveT();
-  alert("Tikidhkaaga waa la kaydiyay ✓");
-}
-function drawT(){
-  var h="";
-  if(!T.length){h='<div class="empty">Tikidh weli ma haysatid</div>'}
-  else{
-    for(var i=0;i<T.length;i++){
-      h+='<div class="it" style="padding-right:16px"><b>🎫 '+T[i].r+'</b><small>'+T[i].d+'</small></div>';
-    }
+/* ===== GPS ===== */
+function setNr(h){$("nr").innerHTML=h}
+function locate(){
+  if(!navigator.geolocation){setNr("GPS lagama heli karo qalabkan.");return}
+  if(watchId!==null){
+    if(ME&&map){map.setView([ME[0],ME[1]],16)}
+    return;
   }
-  $("tkl").innerHTML=h;
+  setNr("Waxaan raadinayaa goobtaada...");
+  firstFix=true;
+  watchId=navigator.geolocation.watchPosition(function(p){
+    ME=[p.coords.latitude,p.coords.longitude];
+    updateMe(firstFix);
+    firstFix=false;
+  },function(e){
+    if(watchId!==null){navigator.geolocation.clearWatch(watchId)}
+    watchId=null;
+    if(e.code==1){setNr("Goobta waa la mamnuucay. Ogolow <b>Location</b>: Settings → Apps → RAAC SMART → Permissions → Location.")}
+    else if(e.code==2){setNr("GPS lama helin. Shid <b>Location</b> telefoonkaaga, kadibna dib isku day.")}
+    else{setNr("Waqtigii wuu dhamaaday. Dib isku day.")}
+  },{enableHighAccuracy:true,timeout:20000,maximumAge:5000});
 }
-function clearT(){
-  if(confirm("Ma hubtaa inaad tirtirto tikidhada?")){T=[];saveT();drawT()}
+function updateMe(center){
+  updateNear();
+  if(!map||!ME)return;
+  var ll=[ME[0],ME[1]];
+  if(!meM){
+    meM=L.marker(ll,{icon:L.divIcon({className:"me",iconSize:[18,18],iconAnchor:[9,9]}),interactive:false}).addTo(map);
+  }else{meM.setLatLng(ll)}
+  var s=ST[NEAR],pts=[ll,[s.a,s.o]];
+  if(!meLine){
+    meLine=L.polyline(pts,{color:"#1e88e5",weight:4,dashArray:"6,8"}).addTo(map);
+  }else{meLine.setLatLngs(pts)}
+  if(center){
+    var d=dist(ME[0],ME[1],s.a,s.o);
+    if(d<30000){map.fitBounds([ll,[s.a,s.o]],{padding:[50,50],maxZoom:16})}
+    else{map.setView(ll,14)}
+  }
 }
-</script>
+function updateNear(){
+  if(!ME)return;
+  var A=[],i;
+  for(i=0;i<ST.length;i++){A.push({i:i,d:dist(ME[0],ME[1],ST[i].a,ST[i].o)})}
+  A.sort(function(a,b){return a.d-b.d});
+  NEAR=A[0].i;
+  var s=ST[NEAR],d=A[0].d,h;
+  if(d>30000){
+    h='<b>'+s.n+'</b><br>Waxaad ka fog tahay Hargeysa ('+fd(d)+'). Tani waa tijaabo kaliya.';
+  }else if(d<60){
+    h='<b>✅ Waxaad joogtaa '+s.n+'</b>';
+  }else{
+    h='<b>'+s.n+'</b><br>'+fd(d)+' · ~'+Math.max(1,Math.round(d/83))+' daq. socod · dhinaca '+dir(ME[0],ME[1],s.a,s.o);
+  }
+  setNr(h);
+  var c="";
+  for(var j=1;j<3;j++){
+    c+='<span class="chip2" onclick="focusStop('+A[j].i+')">'+S
