@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#176B3A">
+<title>RAAC Darawal</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f4f5;color:#171717}
+.top{background:#176B3A;color:#fff;padding:22px 18px;font-size:20px;font-weight:bold}
+.card{background:#fff;margin:14px;padding:16px;border-radius:16px;box-shadow:0 1px 6px rgba(0,0,0,.12)}
+label{display:block;font-size:13px;color:#666;margin:12px 0 6px}
+select,input{display:block;width:100%;padding:14px;border:1px solid #d4d4d8;border-radius:12px;font-size:18px;background:#fff}
+.btn{display:block;width:100%;padding:18px;border:0;border-radius:14px;background:#176B3A;color:#fff;font-size:20px;font-weight:bold;margin-top:16px}
+.btn.stop{background:#c62828}
+.st{font-size:15px;line-height:22px;color:#333}
+.on{color:#15803d;font-weight:bold}
+.err{color:#b91c1c;font-weight:bold}
+</style>
+</head>
+<body>
+<div class="top">🚌 RAAC SMART · Darawal</div>
+<div class="card">
+  <label>Baskaaga</label>
+  <select id="code"></select>
+  <label>PIN-ka (4 lambar)</label>
+  <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+  <button class="btn" id="go" onclick="toggle()">🚌 Bilow safar</button>
+</div>
+<div class="card st" id="st">Diyaar. Dooro baskaaga, geli PIN-ka, kadibna taabo Bilow.</div>
+<div class="card st">Shaashadda ha dansan inta aad wadayso safarka.</div>
+
+<script>
+var SB="https://nogsqmwmdmxqtctzqrnu.supabase.co";
+var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vZ3NxbXdtZG14cXRjdHpxcm51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ1MTE3NjUsImV4cCI6MjExMDA4Nzc2NX0.2s3nhaIpA94MywM6DcNF0xcH35FmPtTzJt3hcouqBXA";
+var running=false,wid=null,tm=null,pos=null,sent=0,wl=null;
+function $(i){return document.getElementById(i)}
+(function(){
+  var h="";
+  for(var k=1;k<=10;k++){h+='<option>H-'+k+'</option>'}
+  $("code").innerHTML=h;
+  try{var c=localStorage.getItem("drv");if(c)$("code").value=c}catch(e){}
+})();
+function say(m,c){$("st").innerHTML='<span class="'+(c||"")+'">'+m+'</span>'}
+function lock(){
+  try{
+    if(navigator.wakeLock){
+      navigator.wakeLock.request("screen").then(function(l){wl=l}).catch(function(){});
+    }
+  }catch(e){}
+}
+function toggle(){if(running){stop()}else{start()}}
+function start(){
+  var pin=$("pin").value.trim();
+  if(pin.length!=4){alert("Geli PIN-ka 4-ta lambar");return}
+  if(!navigator.geolocation){alert("GPS lagama heli karo qalabkan");return}
+  try{localStorage.setItem("drv",$("code").value)}catch(e){}
+  running=true;sent=0;pos=null;
+  $("go").textContent="⏹ Jooji safar";
+  $("go").className="btn stop";
+  $("code").disabled=true;
+  $("pin").disabled=true;
+  say("Waxaan raadinayaa GPS...");
+  wid=navigator.geolocation.watchPosition(function(p){
+    pos=[p.coords.latitude,p.coords.longitude];
+  },function(e){
+    say(e.code==1?"Goobta waa la mamnuucay. Ogolow Location.":"GPS lama helin. Shid Location.","err");
+  },{enableHighAccuracy:true,timeout:20000,maximumAge:3000});
+  tm=setInterval(send,5000);
+  lock();
+}
+function stop(){
+  running=false;
+  if(wid!==null){navigator.geolocation.clearWatch(wid);wid=null}
+  if(tm){clearInterval(tm);tm=null}
+  if(wl){try{wl.release()}catch(e){}wl=null}
+  $("go").textContent="🚌 Bilow safar";
+  $("go").className="btn";
+  $("code").disabled=false;
+  $("pin").disabled=false;
+  say("Safarka waa la joojiyay.");
+}
+function send(){
+  if(!running||!pos)return;
+  fetch(SB+"/rest/v1/rpc/update_bus",{
+    method:"POST",
+    headers:{"Content-Type":"application/json",apikey:KEY,Authorization:"Bearer "+KEY},
+    body:JSON.stringify({p_code:$("code").value,p_pin:$("pin").value.trim(),p_lat:pos[0],p_lng:pos[1]})
+  }).then(function(r){return r.json()}).then(function(ok){
+    if(ok===true){
+      sent++;
+      say("✅ Safarka wuu socdaa<br>La diray: "+sent+" jeer<br>"+pos[0].toFixed(5)+", "+pos[1].toFixed(5),"on");
+    }else if(ok===false){
+      say("❌ PIN-ka ama baska waa khalad. Jooji oo dib isku day.","err");
+    }else{
+      say("❌ Khalad server-ka: "+(ok.message||"aan la aqoon")+". Hubi in SQL-ka la orday.","err");
+    }
+  }).catch(function(){say("Internet ma jiro. Dib ayaan isku dayayaa...","err")});
+}
+document.addEventListener("visibilitychange",function(){
+  if(running&&!document.hidden){lock()}
+});
+</script>
+</body>
+</html>
