@@ -5,6 +5,7 @@
 <title>RAAC SMART</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;font:15px/1.35 system-ui,Roboto,sans-serif;background:#f3f5f3;color:#222}
@@ -672,6 +673,44 @@ function clearT(){
 }
 
 loadRoads();
+/* ===== QIIMAHA IYO QR TIKIDH ===== */
+var PRICE=3000;
+document.querySelector("#trcard .btn").textContent="🎫 Iibso tikidh · "+PRICE+" Sh";
+
+function buy(){
+  if(!CUR.length)return;
+  if(!confirm("Tikidh: "+label(CUR)+"\nQiimaha: "+PRICE+" Sh\nMa iibsanaysaa?"))return;
+  var id="RS-"+Date.now().toString(36).toUpperCase();
+  T.unshift({id:id,r:label(CUR),d:new Date().toLocaleString(),p:PRICE,paid:false});
+  saveT();
+  alert("Tikidhkaaga waa la sameeyay. Tag Tikidhadayda si aad u bixiso.");
+}
+function payT(i){T[i].paid=true;saveT();drawT()}
+function drawT(){
+  var h="",i;
+  if(!T.length){h='<div class="empty">Tikidh weli ma haysatid</div>'}
+  else{
+    for(i=0;i<T.length;i++){
+      var t=T[i];
+      if(!t.id){t.id="RS-"+i+Date.now().toString(36).toUpperCase()}
+      if(!t.p){t.p=PRICE}
+      h+='<div class="card"><b>🎫 '+t.r+'</b><br><small>'+t.d+'</small><br><b>'+t.p+' Sh</b> · ';
+      if(t.paid){
+        h+='<span class="ok">✓ La bixiyay</span><div id="qr'+i+'" style="margin:12px 0 4px"></div><small>'+t.id+'</small>';
+      }else{
+        h+='<span class="late">Lacag la sugayo</span><button class="btn" onclick="payT('+i+')">Bixi '+t.p+' Sh (tijaabo)</button>';
+      }
+      h+='</div>';
+    }
+  }
+  $("tkl").innerHTML=h;
+  if(typeof QRCode!="undefined"){
+    for(var j=0;j<T.length;j++){
+      var e=$("qr"+j);
+      if(e&&T[j].paid){new QRCode(e,{text:T[j].id,width:130,height:130})}
+    }
+  }
+}
 </script>
 </body>
 </html>
