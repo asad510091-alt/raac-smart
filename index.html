@@ -710,7 +710,34 @@ function drawT(){
       if(e&&T[j].paid){new QRCode(e,{text:T[j].id,width:130,height:130})}
     }
   }
+}/* ===== BASASKA NOOL (Supabase) ===== */
+var SB_URL="https://nogsqmwmdmxqtctzqrnu.supabase.co";
+var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vZ3NxbXdtZG14cXRjdHpxcm51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ1MTE3NjUsImV4cCI6MjExMDA4Nzc2NX0.2s3nhaIpA94MywM6DcNF0xcH35FmPtTzJt3hcouqBXA";
+var LIVE={};
+function liveFetch(){
+  if(document.hidden)return;
+  fetch(SB_URL+"/rest/v1/buses?select=code,lat,lng,updated_at",{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}})
+  .then(function(r){return r.json()})
+  .then(function(rows){
+    if(!rows||!rows.length||typeof map=="undefined"||!map||typeof L=="undefined")return;
+    for(var i=0;i<rows.length;i++){
+      var b=rows[i];
+      if(b.lat===null||b.lng===null)continue;
+      var age=(Date.now()-new Date(b.updated_at).getTime())/1000;
+      if(age>60){
+        if(LIVE[b.code]){map.removeLayer(LIVE[b.code]);delete LIVE[b.code]}
+        continue;
+      }
+      var ll=[b.lat,b.lng];
+      if(LIVE[b.code]){LIVE[b.code].setLatLng(ll)}
+      else{
+        LIVE[b.code]=L.marker(ll,{icon:L.divIcon({className:"",html:"<div style='text-align:center;font-size:22px;line-height:22px'>🚍<div style='font-size:10px;background:#d32f2f;color:#fff;border-radius:4px;padding:0 3px;display:inline-block'>"+b.code+"</div></div>",iconSize:[40,36],iconAnchor:[20,18]})}).addTo(map);
+      }
+    }
+  }).catch(function(){});
 }
+setInterval(liveFetch,5000);
+liveFetch();
 </script>
 </body>
 </html>
