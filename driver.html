@@ -29,18 +29,25 @@ select,input{display:block;width:100%;padding:14px;border:1px solid #d4d4d8;bord
   <button class="btn" id="go" onclick="toggle()">🚌 Bilow safar</button>
 </div>
 <div class="card st" id="st">Diyaar. Dooro baskaaga, geli PIN-ka, kadibna taabo Bilow.</div>
-<div class="card st">Shaashadda ha dansan inta aad wadayso safarka.</div>
+<div class="card st" id="note">Shaashadda ha dansan inta aad wadayso safarka.</div>
 
 <script>
 var SB="https://nogsqmwmdmxqtctzqrnu.supabase.co";
 var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vZ3NxbXdtZG14cXRjdHpxcm51Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ1MTE3NjUsImV4cCI6MjExMDA4Nzc2NX0.2s3nhaIpA94MywM6DcNF0xcH35FmPtTzJt3hcouqBXA";
-var running=false,wid=null,tm=null,pos=null,sent=0,wl=null;
+var running=false,wid=null,tm=null,pos=null,sent=0,wl=null,bgId=null,lastSend=0;
+var BG=null;
+try{
+  if(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()){
+    BG=Capacitor.registerPlugin("BackgroundGeolocation");
+  }
+}catch(e){BG=null}
 function $(i){return document.getElementById(i)}
 (function(){
   var h="";
   for(var k=1;k<=10;k++){h+='<option>H-'+k+'</option>'}
   $("code").innerHTML=h;
   try{var c=localStorage.getItem("drv");if(c)$("code").value=c}catch(e){}
+  if(BG){$("note").innerHTML="Waxaad shaashadda dansan kartaa. Goobta waa la sii diri doonaa (calaamad ayaa ka muuqan doonta notification-ka)."}
 })();
 function say(m,c){$("st").innerHTML='<span class="'+(c||"")+'">'+m+'</span>'}
 function lock(){
@@ -51,34 +58,59 @@ function lock(){
   }catch(e){}
 }
 function toggle(){if(running){stop()}else{start()}}
+function lockUI(on){
+  $("go").textContent=on?"⏹ Jooji safar":"🚌 Bilow safar";
+  $("go").className=on?"btn stop":"btn";
+  $("code").disabled=on;
+  $("pin").disabled=on;
+}
+function maybeSend(){
+  if(Date.now()-lastSend>=5000){lastSend=Date.now();send()}
+}
 function start(){
   var pin=$("pin").value.trim();
   if(pin.length!=4){alert("Geli PIN-ka 4-ta lambar");return}
-  if(!navigator.geolocation){alert("GPS lagama heli karo qalabkan");return}
   try{localStorage.setItem("drv",$("code").value)}catch(e){}
-  running=true;sent=0;pos=null;
-  $("go").textContent="⏹ Jooji safar";
-  $("go").className="btn stop";
-  $("code").disabled=true;
-  $("pin").disabled=true;
+  running=true;sent=0;pos=null;lastSend=0;
+  lockUI(true);
   say("Waxaan raadinayaa GPS...");
-  wid=navigator.geolocation.watchPosition(function(p){
-    pos=[p.coords.latitude,p.coords.longitude];
-  },function(e){
-    say(e.code==1?"Goobta waa la mamnuucay. Ogolow Location.":"GPS lama helin. Shid Location.","err");
-  },{enableHighAccuracy:true,timeout:20000,maximumAge:3000});
-  tm=setInterval(send,5000);
-  lock();
+  if(BG){
+    BG.addWatcher({
+      backgroundTitle:"RAAC SMART · Safar",
+      backgroundMessage:"Baskaaga ("+$("code").value+") goobtiisa waa la sii dirayaa.",
+      requestPermissions:true,
+      stale:false,
+      distanceFilter:5
+    },function(loc,err){
+      if(err){
+        if(err.code==="NOT_AUTHORIZED"){
+          say("Goobta waa la mamnuucay. Ogolow Location.","err");
+          if(confirm("Goobta waa loo baahan yahay. Ma furtaa Settings?")){BG.openSettings()}
+        }else{say("GPS khalad: "+(err.message||"aan la aqoon"),"err")}
+        return;
+      }
+      pos=[loc.latitude,loc.longitude];
+      maybeSend();
+    }).then(function(id){bgId=id});
+    tm=setInterval(maybeSend,5000);
+  }else{
+    if(!navigator.geolocation){alert("GPS lagama heli karo qalabkan");stop();return}
+    wid=navigator.geolocation.watchPosition(function(p){
+      pos=[p.coords.latitude,p.coords.longitude];
+    },function(e){
+      say(e.code==1?"Goobta waa la mamnuucay. Ogolow Location.":"GPS lama helin. Shid Location.","err");
+    },{enableHighAccuracy:true,timeout:20000,maximumAge:3000});
+    tm=setInterval(send,5000);
+    lock();
+  }
 }
 function stop(){
   running=false;
+  if(BG&&bgId!==null){try{BG.removeWatcher({id:bgId})}catch(e){}bgId=null}
   if(wid!==null){navigator.geolocation.clearWatch(wid);wid=null}
   if(tm){clearInterval(tm);tm=null}
   if(wl){try{wl.release()}catch(e){}wl=null}
-  $("go").textContent="🚌 Bilow safar";
-  $("go").className="btn";
-  $("code").disabled=false;
-  $("pin").disabled=false;
+  lockUI(false);
   say("Safarka waa la joojiyay.");
 }
 function send(){
@@ -94,12 +126,12 @@ function send(){
     }else if(ok===false){
       say("❌ PIN-ka ama baska waa khalad. Jooji oo dib isku day.","err");
     }else{
-      say("❌ Khalad server-ka: "+(ok.message||"aan la aqoon")+". Hubi in SQL-ka la orday.","err");
+      say("❌ Khalad server-ka: "+(ok.message||"aan la aqoon"),"err");
     }
   }).catch(function(){say("Internet ma jiro. Dib ayaan isku dayayaa...","err")});
 }
 document.addEventListener("visibilitychange",function(){
-  if(running&&!document.hidden){lock()}
+  if(running&&!BG&&!document.hidden){lock()}
 });
 </script>
 </body>
